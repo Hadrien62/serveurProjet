@@ -1,0 +1,16 @@
+const mongoose = require('mongoose');
+
+// Définition du schéma pour la collection "person"
+const produit3Schema = new mongoose.Schema({
+    numberId: String,
+    quantity: Number,
+    name: String,
+    pret: Date,
+    nbHeure: Number,
+    image: String
+});
+
+// Création du modèle basé sur le schéma
+const Produit3 = mongoose.model('produit3', produit3Schema);
+
+module.exports = Produit3;
