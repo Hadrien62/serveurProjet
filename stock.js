@@ -6,6 +6,7 @@ const multer = require('multer');
 const { Observable } = require('rxjs');
 const fs = require('fs');
 const https = require('https');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = 1234;
@@ -41,27 +42,24 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.post('/upload', upload.single('image'), (req, res) => {
-    const imagePath = req.file.filename;
-    res.json({ imagePath });
-});
-
-app.post('/stock/register1', async (req, res) => {
-    const name = req.body.name;
-    const quantity = req.body.quantity;
-    const image = req.body.image;
-    const number = await Produit1.find();
-    // Créer un nouvel utilisateur
-    const newProduit1 = new Produit1({
-        numberId: "1" + toString(number.length),
-        name,
-        quantity,
-        image
-    });
-    h
+app.post('/stock/register1', upload.single('image'), async (req, res) => {
     try {
-        // Enregistrer l'utilisateur dans la base de données
+        const name = req.body.name;
+        const quantity = req.body.quantity;
+        const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+        const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+
+        // Créer un nouvel objet Produit1 avec l'image
+        const newProduit1 = new Produit1({
+            numberId: "1" + produitId,
+            name,
+            quantity,
+            image: imagePath // Attribuez le nom de l'image à l'attribut 'image'
+        });
+
+        // Enregistrez le produit dans la base de données
         await newProduit1.save();
+
         res.send('Ajout réussi!');
     } catch (error) {
         console.error(error);
@@ -69,21 +67,22 @@ app.post('/stock/register1', async (req, res) => {
     }
 });
 
-app.post('/stock/register2', async (req, res) => {
+app.post('/stock/register2', upload.single('image'),async (req, res) => {
     const name = req.body.name;
     const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbJour = req.body.nbJour;
-    const image = req.body.image;
+    const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
     const newProduit2 = new Produit1({
-        numberId: "2" + toString(number.length),
+        numberId: "2" + produitId,
         quantity,
         name,
         pret,
         nbJour,
-        image
+        image: imagePath
     });
     try {
         // Enregistrer l'utilisateur dans la base de données
@@ -95,21 +94,21 @@ app.post('/stock/register2', async (req, res) => {
     }
 });
 
-app.post('/stock/register3', async (req, res) => {
+app.post('/stock/register3',upload.single('image'), async (req, res) => {
     const name = req.body.name;
     const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbHeure = req.body.nbHeure;
-    const image = req.body.image;
-    const number = await Produit3.find();
+    const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
     // Créer un nouvel utilisateur
     const newProduit3 = new Produit3({
-        numberId: "3" + toString(number.length),
+        numberId: "3" + produitId,
         quantity,
         name,
         pret,
         nbHeure,
-        image
+        image: imagePath
     });
     try {
         // Enregistrer l'utilisateur dans la base de données
