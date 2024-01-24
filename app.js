@@ -109,6 +109,15 @@ app.post('/users/getHistoric', async (req, res) => {
         res.status(500).send('Erreur lors de la récupération de l\'historique de l\'utilisateur.');
     }
 });
+
+app.post('/id', async (req, res) => {
+    try{
+        const id = req.body.id;
+        console.log(id);
+    }catch{
+        console.log("error");
+    }
+});
 app.get('/users/getAll', async (req, res) => {
     try {
         // Récupérer tous les utilisateurs de la collection 'users'

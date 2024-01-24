@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
 const { Observable } = require('rxjs');
+const fs = require('fs');
+const https = require('https');
 
 const app = express();
 const port = 1234;
@@ -129,6 +131,16 @@ app.post('/stock/dispo', (req, res) => {
     res.send('Stock modifié!');
 });
 
-app.listen(port, () => {
-    console.log(`Serveur en cours d'exécution sur le port ${port}`);
+
+const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
+const certificate = fs.readFileSync(path.join(__dirname, 'certificate.pem'), 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
+
+
+// Create an HTTPS server
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, '0.0.0.0', () => {  //accpeter tout les ip lol
+    console.log(`HTTPS Server is running on port ${port}`);
 });
