@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const net = require('net');
 const { v4: uuidv4 } = require('uuid');
-
+const bcrypt = require('bcrypt');
+const multer = require('multer');
 const app = express();
 const cors = require('cors'); // Ajout du module cors
 const port = 1234;
@@ -17,11 +18,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 // Configuration de Mongoose
-const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
-mongoose.connect(uri);
+//const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
+const url = 'mongodb://192.168.184.165:27017/FunLab';
+mongoose.connect(url)
 
 // Importer le modèle User
 const User = require('./models/user');
+// Importer le modèle User
+const Produit1 = require('./models/produit1');
+const Produit2 = require("./models/produit2");
+const Produit3 = require("./models/produit3");
 
 // Routes
 app.get('/users/register', (req, res) => {
@@ -134,6 +140,38 @@ app.get('/users/getAll', async (req, res) => {
         res.status(500).send('Erreur lors de la récupération des utilisateurs.');
     }
 });
+
+app.post('/users/connect', async (req, res) => {
+    try {
+        const email = req.body.email;
+        const password = req.body.password;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+        // Utilisez bcrypt.compare pour comparer le mot de passe fourni avec le mot de passe haché stocké
+        console.log(email);
+        console.log(password);
+        console.log(user.password);
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Mot de passe incorrect' });
+        }
+        const userWithoutPassword = {
+            admin: user.admin,
+            numberId: user.numberId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            historic: user.historic
+        };
+
+        res.json({ user: userWithoutPassword });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 app.get('/users/getUserByEmail', async (req, res) => {
     try {
         const  email  = req.query.email; // Récupérer l'e-mail à partir des paramètres de requête
@@ -158,27 +196,43 @@ app.post('/users/register', async (req, res) => {
     const lastName = req.body.nom;
     const email = req.body.email;
     const password = req.body.mdp;
-    const number = await User.find();
     const userId = uuidv4();
 
-    // Créer un nouvel utilisateur
-    const newUser = new User({
-        admin: false,
-        numberId: "0" + userId, //A tester si c'est vide!!!!
-        firstName,
-        lastName,
-        email,
-        password,
-        historic: []
-    });
     try {
+        // Vérifier si l'email existe déjà
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Cet email est déjà utilisé.' });
+        }
+        // Générer le hachage du mot de passe
+        const hashedPassword = await bcrypt.hash(password, 10); // 10 est le nombre de tours de hachage
+
+        // Créer un nouvel utilisateur avec le mot de passe crypté
+        const newUser = new User({
+            admin: false,
+            numberId: "0" + userId,
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword, // Utiliser le mot de passe crypté
+            historic: []
+        });
+
         // Enregistrer l'utilisateur dans la base de données
         await newUser.save();
-        res.send('Inscription réussie!');
+        const userWithoutPassword = {
+            admin: false,
+            numberId: 0+userId,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            historic: []
+        };
+        res.json({ user: userWithoutPassword });
         console.log('Inscription réussie!');
         const users = await User.find();
         console.log('Contenu de la collection User :', users);
-        console.log('Contenu de la requete User :', req.body.nom);
+        console.log('Contenu de la requête User :', req.body.nom);
     } catch (error) {
         console.error(error);
         res.send('Erreur lors de l\'inscription.');
@@ -201,6 +255,113 @@ app.post('/users/login', (req, res) => {
     // Ajoutez ici la logique pour vérifier les informations de connexion
     // et authentifier l'utilisateur
     res.send('Connexion réussie!');
+});
+
+
+
+// Serveur pour le stock ********************************************
+// Routes
+app.get('/stock/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'registration.html'));
+});
+
+const storage = multer.diskStorage({
+    destination: './uploads',
+    filename: (req, file, cb) => {
+        const filename = path.parse(file.originalname).name.replace(/\s/g, '');
+        const extension = path.parse(file.originalname).ext;
+        cb(null, `${filename}${extension}`);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/stock/register1', upload.single('image'), async (req, res) => {
+    try {
+        const name = req.body.name;
+        const quantity = req.body.quantity;
+        const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+        const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+
+        // Créer un nouvel objet Produit1 avec l'image
+        const newProduit1 = new Produit1({
+            numberId: "1" + produitId,
+            name,
+            quantity,
+            image: imagePath // Attribuez le nom de l'image à l'attribut 'image'
+        });
+
+        // Enregistrez le produit dans la base de données
+        await newProduit1.save();
+
+        res.send('Ajout réussi!');
+    } catch (error) {
+        console.error(error);
+        res.send('Erreur lors de l\'inscription.');
+    }
+});
+
+app.post('/stock/register2', upload.single('image'),async (req, res) => {
+    const name = req.body.name;
+    const quantity = req.body.quantity;
+    const pret = req.body.pret;
+    const nbJour = req.body.nbJour;
+    const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+    const number = await Produit2.find();
+    // Créer un nouvel utilisateur
+    const newProduit2 = new Produit1({
+        numberId: "2" + produitId,
+        quantity,
+        name,
+        pret,
+        nbJour,
+        image: imagePath
+    });
+    try {
+        // Enregistrer l'utilisateur dans la base de données
+        await newProduit2.save();
+        res.send('Ajout réussi!');
+    } catch (error) {
+        console.error(error);
+        res.send('Erreur lors de l\'inscription.');
+    }
+});
+
+app.post('/stock/register3',upload.single('image'), async (req, res) => {
+    const name = req.body.name;
+    const quantity = req.body.quantity;
+    const pret = req.body.pret;
+    const nbHeure = req.body.nbHeure;
+    const produitId = uuidv4(); // Générer un identifiant unique pour le produit
+    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+    // Créer un nouvel utilisateur
+    const newProduit3 = new Produit3({
+        numberId: "3" + produitId,
+        quantity,
+        name,
+        pret,
+        nbHeure,
+        image: imagePath
+    });
+    try {
+        // Enregistrer l'utilisateur dans la base de données
+        await newProduit3.save();
+        res.send('Ajout réussi!');
+    } catch (error) {
+        console.error(error);
+        res.send('Erreur lors de l\'inscription.');
+    }
+});
+
+app.get('/stock/dispo', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
+});
+// Gérer la connexion (à implémenter)
+app.post('/stock/dispo', (req, res) => {
+    // Ajoutez ici la logique pour vérifier les informations de connexion
+    // et authentifier l'utilisateur
+    res.send('Stock modifié!');
 });
 
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
