@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 
 // Configuration de Mongoose
 //const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
-const url = 'mongodb://10.224.1.227:27017/FunLab';
+const url = 'mongodb://192.168.184.165:27017/FunLab';
 mongoose.connect(url)
 
 // Importer le modèle User
@@ -116,9 +116,9 @@ app.post('/users/getHistoric', async (req, res) => {
     }
 });
 
-app.post('/id', async (req, res) => {
+app.get('/:id', async (req, res) => {
     try{
-        const id = req.body.id;
+        const id = req.params.id;
         console.log(id);
     }catch{
         console.log("error");
@@ -275,7 +275,10 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-
+app.post('/stock/upload', upload.single('image'), (req, res) => {
+    const imagePath = req.file.filename;
+    res.json({ imagePath });
+});
 app.post('/stock/register1', upload.single('image'), async (req, res) => {
     try {
         const name = req.body.name;
@@ -362,6 +365,27 @@ app.post('/stock/dispo', (req, res) => {
     // Ajoutez ici la logique pour vérifier les informations de connexion
     // et authentifier l'utilisateur
     res.send('Stock modifié!');
+});
+
+app.get('/users/:id', async (req, res) => {
+
+
+    try {
+
+        const id = req.params.id;
+        console.log(id);
+        const user = users.find(unumberId === userId);
+
+        if (user) {
+            // Si l'utilisateur est trouvé, renvoyer ses détails
+            res.send(`Nom: ${user.firstName}, Prénom: ${user.lastName}`);
+        } else {
+            // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
+            res.send('Utilisateur non trouvé');
+        }
+    } catch {
+        console.log("error");
+    }
 });
 
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
