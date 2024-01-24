@@ -8,6 +8,8 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const cors = require('cors'); // Ajout du module cors
 const port = 1234;
+const fs = require('fs');
+const https = require('https');
 
 app.use(cors()); // Ajout du middleware cors
 app.use(express.json());
@@ -123,6 +125,24 @@ app.get('/users/getAll', async (req, res) => {
         res.status(500).send('Erreur lors de la récupération des utilisateurs.');
     }
 });
+app.get('/users/getUserByEmail', async (req, res) => {
+    try {
+        const  email  = req.query.email; // Récupérer l'e-mail à partir des paramètres de requête
+
+        if (!email) {
+            return res.status(400).json({ error: 'L\'e-mail est requis' });
+        }
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+        // Vous pouvez envoyer les détails de l'utilisateur en réponse
+        res.json({ user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 
 app.post('/users/register', async (req, res) => {
     const firstName = req.body.prenom;
@@ -174,6 +194,15 @@ app.post('/users/login', (req, res) => {
     res.send('Connexion réussie!');
 });
 
-app.listen(port, () => {
-    console.log(`Serveur en cours d'exécution sur le port ${port}`);
+const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
+const certificate = fs.readFileSync(path.join(__dirname, 'certificate.pem'), 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
+
+
+// Create an HTTPS server
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, '0.0.0.0', () => {  //accpeter tout les ip lol
+    console.log(`HTTPS Server is running on port ${port}`);
 });
