@@ -364,11 +364,27 @@ app.post('/stock/dispo', (req, res) => {
     res.send('Stock modifié!');
 });
 
+app.get('users/:userId'), (req, res) => {
+
+    const userId = req.params.userId;
+
+
+    const user = users.find(u => u.id === userId);
+
+    if (user) {
+        // Si l'utilisateur est trouvé, renvoyer ses détails
+        res.send(`Nom: ${user.firstName}, Prénom: ${user.lastName}`);
+    } else {
+        // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
+        res.send('Utilisateur non trouvé');
+    }
+
+}
+
+
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
 const certificate = fs.readFileSync(path.join(__dirname, 'certificate.pem'), 'utf8');
 const credentials = { key: privateKey, cert: certificate };
-
-
 
 // Create an HTTPS server
 const httpsServer = https.createServer(credentials, app);
@@ -377,4 +393,3 @@ httpsServer.listen(port, '0.0.0.0', () => {  //accpeter tout les ip lol
     console.log(`HTTPS Server is running on port ${port}`);
 });
 
-//couc
