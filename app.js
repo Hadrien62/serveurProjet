@@ -534,6 +534,72 @@ app.get('/users/:id', async (req, res) => {
     }
 });
 
+// Route pour récupérer tous les produits de type 2
+app.get('/stock/getAllProduit2', async (req, res) => {
+    try {
+        const produits2 = await Produit2.find();
+        res.json({ produits2 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
+    }
+});
+
+// Route pour récupérer tous les produits de type 3
+app.get('/stock/getAllProduit3', async (req, res) => {
+    try {
+        const produits3 = await Produit3.find();
+        res.json({ produits3 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
+    }
+});
+
+app.post('/stock/modif2', async (req, res) => {
+    try {
+        const { numberId, name, pret, nbJour, image, reserved, isLate } = req.body;
+
+        // Trouver et mettre à jour le produit avec les nouvelles informations
+        const updatedProduct = await Produit2.findOneAndUpdate(
+            { numberId },
+            { name, pret, nbJour, image, reserved, isLate },
+            { new: true }
+        );
+
+        if (updatedProduct) {
+            res.json({ message: 'Produit mis à jour avec succès', updatedProduct });
+        } else {
+            res.status(404).send('Produit non trouvé');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la mise à jour du produit');
+    }
+});
+app.post('/stock/modif3', async (req, res) => {
+    try {
+        const { numberId, name, pret, nbHeure, image, reserved, isLate } = req.body;
+
+        // Trouver et mettre à jour le produit avec les nouvelles informations
+        const updatedProduct = await Produit3.findOneAndUpdate(
+            { numberId },
+            { name, pret, nbHeure, image, reserved, isLate },
+            { new: true }
+        );
+
+        if (updatedProduct) {
+            res.json({ message: 'Produit mis à jour avec succès', updatedProduct });
+        } else {
+            res.status(404).send('Produit non trouvé');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la mise à jour du produit');
+    }
+});
+
+
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
 const certificate = fs.readFileSync(path.join(__dirname, 'certificate.pem'), 'utf8');
 const credentials = { key: privateKey, cert: certificate };
