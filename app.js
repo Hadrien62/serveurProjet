@@ -283,8 +283,8 @@ app.post('/stock/register1', async (req, res) => {
     try {
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imageURL = req.body.imageName; // Récupérez le nom du fichier téléchargé
-
+        const imageURL = req.body.image1; // Récupérez le nom du fichier téléchargé
+        console.log(imageURL);
         // Vérifiez si un produit avec le même nom existe déjà
         const existingProduct = await Produit1.findOne({ name });
 
@@ -322,7 +322,7 @@ app.post('/stock/register2',async (req, res) => {
     const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
-    const newProduit2 = new Produit1({
+    const newProduit2 = new Produit2({
         numberId: "2" + produitId,
         quantity,
         name,
@@ -373,7 +373,7 @@ app.post('/stock/modif1', async (req, res) => {
         const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imageURL = req.body.imageName; // Récupérez le nom du fichier téléchargé
+        const imageURL = req.body.image1; // Récupérez le nom du fichier téléchargé
 
         // Vérifiez d'abord si le produit avec l'identifiant existe
 
@@ -400,6 +400,19 @@ app.post('/stock/modif1', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Erreur lors de la mise à jour.');
+    }
+});
+
+app.get('/stock/getAllProduit1', async (req, res) => {
+    try {
+        // Récupérer tous les produits de type Produit1 depuis la base de données
+        const produits1 = await Produit1.find();
+
+        // Renvoyer la liste des produits en tant que réponse JSON
+        res.json({ produits1 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
     }
 });
 
