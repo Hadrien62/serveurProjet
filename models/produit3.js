@@ -3,12 +3,13 @@ const mongoose = require('mongoose');
 // Définition du schéma pour la collection "person"
 const produit3Schema = new mongoose.Schema({
     numberId: String,
-    quantity: Number,
     name: String,
     pret: Date,
     nbHeure: Number,
     image: String,
-    reserved: Boolean
+    reserved: Boolean,
+    id_user_reserved : String,
+    is_late : Boolean
 });
 
 // Création du modèle basé sur le schéma
