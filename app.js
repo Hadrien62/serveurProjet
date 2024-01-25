@@ -456,23 +456,27 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.post('/stock/modif1', async (req, res) => {
     try {
-        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imageURL = req.body.image1; 
-        console.log(imageURL);
+        let imageURL = req.body.image1;
+        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
+        console.log('salut');
+        console.log(productId);
 
         // Vérifiez d'abord si le produit avec l'identifiant existe
 
         const existingProduct = await Produit1.findOne({ numberId: productId });
-
+        console.log(existingProduct.name);
         if (!existingProduct) {//on vérifie si le produit existe
             return res.status(404).send('Produit non trouvé.');
         }
         const existingProduct2 = await Produit1.findOne({ name });
 
-        if (existingProduct2) {//On vérifie si le nom existe déjà
+        if (existingProduct2 && existingProduct.name != name) {//On vérifie si le nom existe déjà
             return res.status(400).send('Un produit avec le même nom existe déjà.');
+        }
+        if(imageURL == ''){
+            imageURL = existingProduct.image1;
         }
 
         // Mettez à jour les champs nécessaires du produit
@@ -482,7 +486,6 @@ app.post('/stock/modif1', async (req, res) => {
 
         // Enregistrez les modifications dans la base de données
         await existingProduct.save();
-
         res.send('Mise à jour réussie!');
     } catch (error) {
         console.error(error);
