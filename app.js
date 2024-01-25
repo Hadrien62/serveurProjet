@@ -313,13 +313,13 @@ app.post('/stock/register1', async (req, res) => {
 });
 
 
-app.post('/stock/register2', upload.single('image'),async (req, res) => {
+app.post('/stock/register2',async (req, res) => {
     const name = req.body.name;
     const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbJour = req.body.nbJour;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
     const newProduit2 = new Produit1({
@@ -328,7 +328,8 @@ app.post('/stock/register2', upload.single('image'),async (req, res) => {
         name,
         pret,
         nbJour,
-        image: imagePath
+        image: imagePath,
+        reserved: false
     });
     try {
         // Enregistrer l'utilisateur dans la base de données
@@ -340,13 +341,13 @@ app.post('/stock/register2', upload.single('image'),async (req, res) => {
     }
 });
 
-app.post('/stock/register3',upload.single('image'), async (req, res) => {
+app.post('/stock/register3', async (req, res) => {
     const name = req.body.name;
     const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbHeure = req.body.nbHeure;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     // Créer un nouvel utilisateur
     const newProduit3 = new Produit3({
         numberId: "3" + produitId,
@@ -354,7 +355,8 @@ app.post('/stock/register3',upload.single('image'), async (req, res) => {
         name,
         pret,
         nbHeure,
-        image: imagePath
+        image: imagePath,
+        reserved: false
     });
     try {
         // Enregistrer l'utilisateur dans la base de données

@@ -7,7 +7,8 @@ const produit3Schema = new mongoose.Schema({
     name: String,
     pret: Date,
     nbHeure: Number,
-    image: String
+    image: String,
+    reserved: Boolean
 });
 
 // Création du modèle basé sur le schéma
