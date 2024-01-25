@@ -368,6 +368,8 @@ app.post('/stock/register3', async (req, res) => {
     }
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.post('/stock/modif1', async (req, res) => {
     try {
         const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
