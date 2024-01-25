@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 
 // Configuration de Mongoose
 //const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
-const url = 'mongodb://10.224.1.227:27017/FunLab';
+const url = 'mongodb://192.168.184.165:27017/FunLab';
 mongoose.connect(url)
 
 // Importer le modèle User
@@ -146,172 +146,33 @@ setInterval(async ()=>{
     
 },60000)
 
-app.get("/adminpanel", async(req,res)=>{
-
-    const emprunts = []
-    const machines3 = await Produit3.find();
-    for(element of machines3){
-        if(element.reserved==true){
-            emprunts.push({
-                "id":element.numberId,
-                "nom":element.name,
-                "date":element.pret + element.nbHeure,
-                "islate":element.is_late
-            })
-        }
-    }
-    const machines2 = await Produit2.find();
-    for(element of machines2){
-        if(element.reserved==true){
-            let d = (element.pret + element.nbJour)
-            let f = d.substring(0,d.search("GMT")) 
-            emprunts.push({
-                "id":element.numberId,
-                "nom":element.name,
-                "date":f,
-                "islate":element.is_late
-            })
-        }
-    }
-    const data = {
-        "data":emprunts
-    }
-    res.send(JSON.stringify(data))
-
- 
-  
-})
-
-app.get('/reservation/rendre/:id', async(req,res) =>{
-    try{
-        const idequipement= req.params.id
-        console.log(idequipement)
-
-        const type = parseInt(idequipement.substring(0,1))
-        console.log(type)
-
-        res.send("ok");
-        switch(type){
-            case 3:
-                const machines3 = await Produit3.find();
-                var machine3;
-                for(element of machines3){
-                    if(element.numberId==idequipement){
-                        machine3 = element
-                    }
-                }
-                machine3.id_user_reserved = ""
-                machine3.reserved = false
-                machine3.pret = null
-                machine3.nbHeure = null
-                machine3.save();
-                break;
-            case 2:
-                const machines2 = await Produit2.find();
-                var machine2;
-                for(element of machines2){
-                    if(element.numberId==idequipement){
-                        machine2 = element
-                    }
-                }
-                console.log(machine2)
-                machine2.id_user_reserved = ''
-                machine2.reserved = false
-                machine2.pret = null
-                machine2.nbJour = null
-                machine2.save();
-                break;
-        }
-
-
-      
-
-        
-        
-    
-
-
-    }catch (error){
-        console.log(error)
-    }
-})
 
 app.post('/reservation', async(req,res) =>{
-    console.log("ok")
+
     try{
-        const iduser = req.body.iduser
-        const idequipement=  req.body.idequipement
-        const duree = req.body.duree
-        const type = req.body.type
+        const iduser = req.query.iduser
+        const idequipement=  req.query.idequipement
+        const duree = req.query.duree
+        const type = req.query.type
 
-        res.send("ok")
         console.log(`${iduser}, ${idequipement}, ${duree}, ${type}`)
-        const machines2 = await Produit2.find();
-        const machines3 = await Produit3.find();
-        const machines1 = await Produit1.find();
-        console.log(machines2)
-
-        const users = await User.find()
-        var current_user;
-        for(element of users){
-            if(element.numberId == iduser){
-                current_user = element;
-            }
+        var machine;
+        switch(type){
+            case "heure":
+                machine = await Produit3.findOne({ numberId : idequipement});
+                machine.nbHeure = duree
+                break;
+            case "jour":
+                machine = await Produit2.findOne({ numberId : idequipement});
+                machine.nbJour = duree
+                break;
         }
 
-       
-        switch(parseInt(type)){
-            case 3:
-                var machine3;
-                for(element of machines3){
-                    if(element.numberId==idequipement){
-                        machine3 = element
-                    }
-                }
-                console.log(machine3)
-                machine3.id_user_reserved = iduser
-                machine3.reserved = true
-                machine3.pret = Date.now()
-                machine3.nbHeure = duree
-                machine3.save();
+        machine.id_user_reserved = iduser
+        machine.reserved = true
+        machine.pret = Date.now()
 
-                current_user.historic.push(machine3)
-
-
-                break;
-            case 2:
-                var machine2;
-                for(element of machines2){
-                    if(element.numberId==idequipement){
-                        machine2 = element
-                    }
-                }
-                console.log(machine2)
-                machine2.id_user_reserved = iduser
-                machine2.reserved = true
-                machine2.pret = Date.now()
-                machine2.nbJour = duree
-                machine2.save();
-                current_user.historic.push(machine2)
-                break;
-            case 1:
-                var machine1;
-                for(element of machines1){
-                    if(element.numberId==idequipement){
-                        machine1 = element
-                    }
-                }
-                console.log(machine1)
-                machine1.quantity -= parseInt(duree)
-                machine1.save();
-                current_user.historic.push(machine1)
-                break;
-
-        }
-
-
-      current_user.save()
-
+        machine.save();
         
         
     
@@ -321,31 +182,6 @@ app.post('/reservation', async(req,res) =>{
         console.log(error)
     }
 });
-
-
-app.get('/reservation/:id', async(req,res)=>{
-    try{
-        const id = req.params.id;
-        console.log(id);
-        const type = parseInt(id.substring(0,1))
-        if(type != 1){
-            res.status(500).send('Pas le bon truc frangin');
-        }
-        else{
-            const machines1 = await Produit1.find();
-            var machine1;
-            for(element of machines1){
-                if(element.numberId==id){
-                    machine1 = element
-                }
-            }
-            console.log(machine1)
-            res.send(machine1.quantity)
-        }
-    }catch{
-        console.log("error");
-    }
-})
 
 app.get('/:id', async (req, res) => {
     try{
@@ -394,8 +230,7 @@ app.post('/users/connect', async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
-            historic: user.historic,
-            mdp: password
+            historic: user.historic
         };
 
         res.json({ user: userWithoutPassword });
@@ -458,7 +293,6 @@ app.post('/users/register', async (req, res) => {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            mdp: password,
             historic: []
         };
         res.json({ user: userWithoutPassword });
