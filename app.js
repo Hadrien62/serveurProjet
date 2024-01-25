@@ -279,11 +279,19 @@ app.post('/stock/upload', upload.single('image'), (req, res) => {
     const imagePath = req.file.filename;
     res.json({ imagePath });
 });
-app.post('/stock/register1', upload.single('image'), async (req, res) => {
+app.post('/stock/register1', async (req, res) => {
     try {
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imagePath = req.file.filename; // Récupérez le nom du fichier téléchargé
+        const imageURL = req.body.imageName; // Récupérez le nom du fichier téléchargé
+
+        // Vérifiez si un produit avec le même nom existe déjà
+        const existingProduct = await Produit1.findOne({ name });
+
+        if (existingProduct) {
+            return res.status(400).send('Un produit avec le même nom existe déjà.');
+        }
+
         const produitId = uuidv4(); // Générer un identifiant unique pour le produit
 
         // Créer un nouvel objet Produit1 avec l'image
@@ -291,7 +299,7 @@ app.post('/stock/register1', upload.single('image'), async (req, res) => {
             numberId: "1" + produitId,
             name,
             quantity,
-            image: imagePath // Attribuez le nom de l'image à l'attribut 'image'
+            image1: imageURL // Attribuez le nom de l'image à l'attribut 'image'
         });
 
         // Enregistrez le produit dans la base de données
@@ -300,9 +308,10 @@ app.post('/stock/register1', upload.single('image'), async (req, res) => {
         res.send('Ajout réussi!');
     } catch (error) {
         console.error(error);
-        res.send('Erreur lors de l\'inscription.');
+        res.status(500).send('Erreur lors de l\'inscription.');
     }
 });
+
 
 app.post('/stock/register2', upload.single('image'),async (req, res) => {
     const name = req.body.name;
@@ -357,6 +366,41 @@ app.post('/stock/register3',upload.single('image'), async (req, res) => {
     }
 });
 
+app.post('/stock/modif1', async (req, res) => {
+    try {
+        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
+        const name = req.body.name;
+        const quantity = req.body.quantity;
+        const imageURL = req.body.imageName; // Récupérez le nom du fichier téléchargé
+
+        // Vérifiez d'abord si le produit avec l'identifiant existe
+
+        const existingProduct = await Produit1.findOne({ numberId: productId });
+
+        if (!existingProduct) {//on vérifie si le produit existe
+            return res.status(404).send('Produit non trouvé.');
+        }
+        const existingProduct2 = await Produit1.findOne({ name });
+
+        if (existingProduct2) {//On vérifie si le nom existe déjà
+            return res.status(400).send('Un produit avec le même nom existe déjà.');
+        }
+
+        // Mettez à jour les champs nécessaires du produit
+        existingProduct.name = name;
+        existingProduct.quantity = quantity;
+        existingProduct.image1 = imageURL;
+
+        // Enregistrez les modifications dans la base de données
+        await existingProduct.save();
+
+        res.send('Mise à jour réussie!');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la mise à jour.');
+    }
+});
+
 app.get('/stock/dispo', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
@@ -368,23 +412,23 @@ app.post('/stock/dispo', (req, res) => {
 });
 
 app.get('/users/:id', async (req, res) => {
-
-
     try {
-
         const id = req.params.id;
-        console.log(id);
-        const user = users.find(unumberId === userId);
 
-        if (user) {
+        console.log(id);
+
+        const existingUser = await User.findOne({ numberId: id });
+
+        if (existingUser) {
             // Si l'utilisateur est trouvé, renvoyer ses détails
-            res.send(`Nom: ${user.firstName}, Prénom: ${user.lastName}`);
+            res.send(`Nom: ${existingUser.firstName}, Prénom: ${existingUser.lastName}`);
         } else {
             // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
             res.send('Utilisateur non trouvé');
         }
-    } catch {
-        console.log("error");
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur serveur');
     }
 });
 

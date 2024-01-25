@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 // Définition du schéma pour la collection "person"
 const produit1Schema = new mongoose.Schema({
     numberId: String,
-    quantity: Number,
+    quantity: String,
     name: String,
-    image: String
+    image1: String
 });
 
 // Création du modèle basé sur le schéma
