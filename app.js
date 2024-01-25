@@ -116,6 +116,73 @@ app.post('/users/getHistoric', async (req, res) => {
     }
 });
 
+setInterval(async ()=>{
+    try{
+        const machines3 = await Produit3.find();
+
+        for(var machine of machines3){
+            if(machine.reserved == true && machine.is_late == false){
+                if( (machine.pret + machine.nbHeure - Date.now()) < 0){
+                    machine.is_late = true
+                }
+            }
+            machine.save()
+        }
+
+        const machines2 = await Produit2.find();
+
+        for(var machine of machines2){
+            if(machine.reserved == true && machine.is_late == false){
+                if( (machine.pret + machine.nbJour - Date.now()) < 0){
+                    machine.is_late = true
+                }
+            }
+            machine.save()
+        }
+
+    }catch(error){
+        console.log(error)
+    }
+    
+},60000)
+
+
+app.post('/reservation', async(req,res) =>{
+
+    try{
+        const iduser = req.query.iduser
+        const idequipement=  req.query.idequipement
+        const duree = req.query.duree
+        const type = req.query.type
+
+        console.log(`${iduser}, ${idequipement}, ${duree}, ${type}`)
+        var machine;
+        switch(type){
+            case "heure":
+                machine = await Produit3.findOne({ numberId : idequipement});
+                machine.nbHeure = duree
+                break;
+            case "jour":
+                machine = await Produit2.findOne({ numberId : idequipement});
+                machine.nbJour = duree
+                break;
+        }
+
+        machine.id_user_reserved = iduser
+        machine.reserved = true
+        machine.pret = Date.now()
+
+        machine.save();
+        
+        
+    
+
+
+    }catch (error){
+        console.log(error)
+    }
+});
+
 app.get('/:id', async (req, res) => {
     try{
         const id = req.params.id;
@@ -322,14 +389,16 @@ app.post('/stock/register2',async (req, res) => {
     const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
-    const newProduit2 = new Produit1({
+    const newProduit2 = new Produit2({
         numberId: "2" + produitId,
         quantity,
         name,
         pret,
         nbJour,
         image: imagePath,
-        reserved: false
+        reserved: false,
+        id_user_reserved : '',
+        is_late:false
     });
     try {
         // Enregistrer l'utilisateur dans la base de données
@@ -338,6 +407,19 @@ app.post('/stock/register2',async (req, res) => {
     } catch (error) {
         console.error(error);
         res.send('Erreur lors de l\'inscription.');
+    }
+});
+
+app.get('/stock/getAllProduit1', async (req, res) => {
+    try {
+        // Récupérer tous les produits de type Produit1 depuis la base de données
+        const produits1 = await Produit1.find();
+
+        // Renvoyer la liste des produits en tant que réponse JSON
+        res.json({ produits1 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
     }
 });
 
@@ -356,7 +438,9 @@ app.post('/stock/register3', async (req, res) => {
         pret,
         nbHeure,
         image: imagePath,
-        reserved: false
+        reserved: false,
+        id_user_reserved : '',
+        is_late:false
     });
     try {
         // Enregistrer l'utilisateur dans la base de données
@@ -373,7 +457,8 @@ app.post('/stock/modif1', async (req, res) => {
         const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imageURL = req.body.imageName; // Récupérez le nom du fichier téléchargé
+        const imageURL = req.body.image1; 
+        console.log(imageURL);
 
         // Vérifiez d'abord si le produit avec l'identifiant existe
 
@@ -423,7 +508,7 @@ app.get('/users/:id', async (req, res) => {
 
         if (existingUser) {
             // Si l'utilisateur est trouvé, renvoyer ses détails
-            res.send(`Nom: ${existingUser.firstName}, Prénom: ${existingUser.lastName}`);
+            res.send(`${existingUser.firstName} ${existingUser.lastName}`);
         } else {
             // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
             res.send('Utilisateur non trouvé');
