@@ -565,20 +565,19 @@ app.post('/stock/register1', async (req, res) => {
 
 app.post('/stock/register2',async (req, res) => {
     const name = req.body.name;
-    const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbJour = req.body.nbJour;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
+    console.log("Image: "+imagePath);
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
     const newProduit2 = new Produit2({
         numberId: "2" + produitId,
-        quantity,
         name,
         pret,
         nbJour,
-        image: imagePath,
+        image1: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
@@ -605,22 +604,45 @@ app.get('/stock/getAllProduit1', async (req, res) => {
         res.status(500).send('Erreur lors de la récupération des produits.');
     }
 });
+app.get('/stock/getAllProduit2', async (req, res) => {
+    try {
+        // Récupérer tous les produits de type Produit1 depuis la base de données
+        const produits2 = await Produit2.find();
+
+        // Renvoyer la liste des produits en tant que réponse JSON
+        res.json({ produits2 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
+    }
+});
+
+app.get('/stock/getAllProduit3', async (req, res) => {
+    try {
+        // Récupérer tous les produits de type Produit1 depuis la base de données
+        const produits3 = await Produit3.find();
+
+        // Renvoyer la liste des produits en tant que réponse JSON
+        res.json({ produits3 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur lors de la récupération des produits.');
+    }
+});
 
 app.post('/stock/register3', async (req, res) => {
     const name = req.body.name;
-    const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbHeure = req.body.nbHeure;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
     // Créer un nouvel utilisateur
     const newProduit3 = new Produit3({
         numberId: "3" + produitId,
-        quantity,
         name,
         pret,
         nbHeure,
-        image: imagePath,
+        image1: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
@@ -635,25 +657,31 @@ app.post('/stock/register3', async (req, res) => {
     }
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.post('/stock/modif1', async (req, res) => {
     try {
-        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
         const name = req.body.name;
         const quantity = req.body.quantity;
-        const imageURL = req.body.image1;
-        console.log(imageURL);
+        let imageURL = req.body.image1;
+        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
+        console.log('salut');
+        console.log(productId);
 
         // Vérifiez d'abord si le produit avec l'identifiant existe
 
         const existingProduct = await Produit1.findOne({ numberId: productId });
-
+        console.log(existingProduct.name);
         if (!existingProduct) {//on vérifie si le produit existe
             return res.status(404).send('Produit non trouvé.');
         }
         const existingProduct2 = await Produit1.findOne({ name });
 
-        if (existingProduct2) {//On vérifie si le nom existe déjà
+        if (existingProduct2 && existingProduct.name != name) {//On vérifie si le nom existe déjà
             return res.status(400).send('Un produit avec le même nom existe déjà.');
+        }
+        if(imageURL == ''){
+            imageURL = existingProduct.image1;
         }
 
         // Mettez à jour les champs nécessaires du produit
@@ -663,7 +691,6 @@ app.post('/stock/modif1', async (req, res) => {
 
         // Enregistrez les modifications dans la base de données
         await existingProduct.save();
-
         res.send('Mise à jour réussie!');
     } catch (error) {
         console.error(error);
