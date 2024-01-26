@@ -28,6 +28,7 @@ const User = require('./models/user');
 const Produit1 = require('./models/produit1');
 const Produit2 = require("./models/produit2");
 const Produit3 = require("./models/produit3");
+const { last } = require('rxjs');
 
 // Routes
 app.get('/users/register', (req, res) => {
@@ -143,7 +144,7 @@ setInterval(async ()=>{
     }catch(error){
         console.log(error)
     }
-    
+
 },60000)
 
 app.get("/adminpanel", async(req,res)=>{
@@ -152,10 +153,19 @@ app.get("/adminpanel", async(req,res)=>{
     const machines3 = await Produit3.find();
     for(element of machines3){
         if(element.reserved==true){
+            let d = (element.pret + element.nbHeure)
+            let f = d.substring(0,d.search("GMT"))
+            let g=(Date.parse(element.pret)) + 2*24*60*60*1000
+            let j = (Math.floor((((Math.abs(Date.now() - g) /1000)/60)/60)/24))
+            let k = j==1?j+" jour de retard":j+" jours de retard"
+            console.log(g)
+            l = Date(g).substring(0,(Date(g)).search("GMT"))
+            console.log(j)
+            console.log(g)
             emprunts.push({
                 "id":element.numberId,
                 "nom":element.name,
-                "date":element.pret + element.nbHeure,
+                "date":element.is_late?k:l,
                 "islate":element.is_late
             })
         }
@@ -164,11 +174,18 @@ app.get("/adminpanel", async(req,res)=>{
     for(element of machines2){
         if(element.reserved==true){
             let d = (element.pret + element.nbJour)
-            let f = d.substring(0,d.search("GMT")) 
+            let f = d.substring(0,d.search("GMT"))
+            let g=(Date.parse(element.pret)) + 2*24*60*60*1000
+            let j = (Math.floor((((Math.abs(Date.now() - g) /1000)/60)/60)/24))
+            let k = j==1?j+" jour de retard":j+" jours de retard"
+            console.log(g)
+            l = Date(g).substring(0,(Date(g)).search("GMT"))
+            console.log(j)
+            console.log(l)
             emprunts.push({
                 "id":element.numberId,
                 "nom":element.name,
-                "date":f,
+                "date":element.is_late?k:l,
                 "islate":element.is_late
             })
         }
@@ -176,10 +193,11 @@ app.get("/adminpanel", async(req,res)=>{
     const data = {
         "data":emprunts
     }
+    console.log(data)
     res.send(JSON.stringify(data))
 
- 
-  
+
+
 })
 
 app.get('/reservation/rendre/:id', async(req,res) =>{
@@ -224,11 +242,11 @@ app.get('/reservation/rendre/:id', async(req,res) =>{
         }
 
 
-      
 
-        
-        
-    
+
+
+
+
 
 
     }catch (error){
@@ -237,14 +255,14 @@ app.get('/reservation/rendre/:id', async(req,res) =>{
 })
 
 app.post('/reservation', async(req,res) =>{
-    
+
     try{
         const iduser = req.body.iduser
         const idequipement=  req.body.idequipement
         const duree = req.body.duree
         const type = req.body.type
 
-                console.log(`${iduser}, ${idequipement}, ${duree}, ${type}`)
+        console.log(`${iduser}, ${idequipement}, ${duree}, ${type}`)
         const machines2 = await Produit2.find();
         const machines3 = await Produit3.find();
         const machines1 = await Produit1.find();
@@ -258,7 +276,7 @@ app.post('/reservation', async(req,res) =>{
             }
         }
 
-       
+
         switch(parseInt(type)){
             case 3:
                 var machine3;
@@ -309,11 +327,11 @@ app.post('/reservation', async(req,res) =>{
         }
 
 
-      current_user.save()
+        current_user.save()
 
-        
-        
-    
+
+
+
 
 
     }catch (error){
@@ -325,10 +343,10 @@ app.post('/reservation', async(req,res) =>{
 app.get('/reservation/:id', async(req,res)=>{
     try{
         const id = req.params.id;
-        console.log(id);
+        console.log("ok2");
         const type = parseInt(id.substring(0,1))
         if(type != 1){
-            res.status(500).send('Pas le bon truc frangin');
+            res.send('Pas le bon truc frangin');
         }
         else{
             const machines1 = await Produit1.find();
@@ -338,7 +356,7 @@ app.get('/reservation/:id', async(req,res)=>{
                     machine1 = element
                 }
             }
-            console.log(machine1)
+            console.log("ok1")
             res.send(machine1.quantity)
         }
     }catch{
@@ -547,19 +565,20 @@ app.post('/stock/register1', async (req, res) => {
 
 app.post('/stock/register2',async (req, res) => {
     const name = req.body.name;
+    const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbJour = req.body.nbJour;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
-    console.log("Image: "+imagePath);
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
     const newProduit2 = new Produit2({
         numberId: "2" + produitId,
+        quantity,
         name,
         pret,
         nbJour,
-        image1: imagePath,
+        image: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
@@ -587,45 +606,21 @@ app.get('/stock/getAllProduit1', async (req, res) => {
     }
 });
 
-app.get('/stock/getAllProduit2', async (req, res) => {
-    try {
-        // Récupérer tous les produits de type Produit1 depuis la base de données
-        const produits2 = await Produit2.find();
-
-        // Renvoyer la liste des produits en tant que réponse JSON
-        res.json({ produits2 });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur lors de la récupération des produits.');
-    }
-});
-
-app.get('/stock/getAllProduit3', async (req, res) => {
-    try {
-        // Récupérer tous les produits de type Produit1 depuis la base de données
-        const produits3 = await Produit3.find();
-
-        // Renvoyer la liste des produits en tant que réponse JSON
-        res.json({ produits3 });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur lors de la récupération des produits.');
-    }
-});
-
 app.post('/stock/register3', async (req, res) => {
     const name = req.body.name;
+    const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbHeure = req.body.nbHeure;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     // Créer un nouvel utilisateur
     const newProduit3 = new Produit3({
         numberId: "3" + produitId,
+        quantity,
         name,
         pret,
         nbHeure,
-        image1: imagePath,
+        image: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
@@ -640,31 +635,25 @@ app.post('/stock/register3', async (req, res) => {
     }
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 app.post('/stock/modif1', async (req, res) => {
     try {
+        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
         const name = req.body.name;
         const quantity = req.body.quantity;
-        let imageURL = req.body.image1;
-        const productId = req.body.productId; // Identifiant unique du produit à mettre à jour
-        console.log('salut');
-        console.log(productId);
+        const imageURL = req.body.image1;
+        console.log(imageURL);
 
         // Vérifiez d'abord si le produit avec l'identifiant existe
 
         const existingProduct = await Produit1.findOne({ numberId: productId });
-        console.log(existingProduct.name);
+
         if (!existingProduct) {//on vérifie si le produit existe
             return res.status(404).send('Produit non trouvé.');
         }
         const existingProduct2 = await Produit1.findOne({ name });
 
-        if (existingProduct2 && existingProduct.name != name) {//On vérifie si le nom existe déjà
+        if (existingProduct2) {//On vérifie si le nom existe déjà
             return res.status(400).send('Un produit avec le même nom existe déjà.');
-        }
-        if(imageURL == ''){
-            imageURL = existingProduct.image1;
         }
 
         // Mettez à jour les champs nécessaires du produit
@@ -674,6 +663,7 @@ app.post('/stock/modif1', async (req, res) => {
 
         // Enregistrez les modifications dans la base de données
         await existingProduct.save();
+
         res.send('Mise à jour réussie!');
     } catch (error) {
         console.error(error);
@@ -705,24 +695,21 @@ app.post('/stock/dispo', (req, res) => {
 });
 
 app.get('/users/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
 
-        console.log(id);
+    const id = req.params.id;
 
-        const existingUser = await User.findOne({ numberId: id });
+    console.log(id);
 
-        if (existingUser) {
-            // Si l'utilisateur est trouvé, renvoyer ses détails
-            res.send(`${existingUser.firstName} ${existingUser.lastName}`);
-        } else {
-            // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
-            res.send('Utilisateur non trouvé');
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur serveur');
+    const existingUser = await User.findOne({ numberId: id });
+
+    if (existingUser) {
+        // Si l'utilisateur est trouvé, renvoyer ses détails
+        res.send(`${existingUser.firstName} ${existingUser.lastName}`);
+    } else {
+        // Si l'utilisateur n'est pas trouvé, renvoyer un message approprié
+        res.send('Utilisateur non trouvé');
     }
+
 });
 
 const privateKey = fs.readFileSync(path.join(__dirname, 'private-key.pem'), 'utf8');
