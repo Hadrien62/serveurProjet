@@ -559,7 +559,7 @@ app.post('/stock/register2',async (req, res) => {
         name,
         pret,
         nbJour,
-        image: imagePath,
+        image1: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
@@ -625,7 +625,7 @@ app.post('/stock/register3', async (req, res) => {
         name,
         pret,
         nbHeure,
-        image: imagePath,
+        image1: imagePath,
         reserved: false,
         id_user_reserved : '',
         is_late:false
