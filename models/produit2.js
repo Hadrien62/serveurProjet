@@ -8,7 +8,7 @@ const produit2Schema = new mongoose.Schema({
     nbJour: Number,
     image: String,
     reserved: Boolean,
-    id_user_reserved : String,
+    id_user_reserved: String,
     is_late: Boolean
 });
 
