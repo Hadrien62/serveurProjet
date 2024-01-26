@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 
 // Configuration de Mongoose
 //const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
-const url = 'mongodb://192.168.184.165:27017/FunLab';
+const url = 'mongodb://192.168.184.77:27017/FunLab';
 mongoose.connect(url)
 
 // Importer le modèle User
@@ -547,15 +547,16 @@ app.post('/stock/register1', async (req, res) => {
 
 app.post('/stock/register2',async (req, res) => {
     const name = req.body.name;
+    const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbJour = req.body.nbJour;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
-    console.log("Image: "+imagePath);
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     const number = await Produit2.find();
     // Créer un nouvel utilisateur
     const newProduit2 = new Produit2({
         numberId: "2" + produitId,
+        quantity,
         name,
         pret,
         nbJour,
@@ -587,42 +588,17 @@ app.get('/stock/getAllProduit1', async (req, res) => {
     }
 });
 
-app.get('/stock/getAllProduit2', async (req, res) => {
-    try {
-        // Récupérer tous les produits de type Produit1 depuis la base de données
-        const produits2 = await Produit2.find();
-
-        // Renvoyer la liste des produits en tant que réponse JSON
-        res.json({ produits2 });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur lors de la récupération des produits.');
-    }
-});
-
-app.get('/stock/getAllProduit3', async (req, res) => {
-    try {
-        // Récupérer tous les produits de type Produit1 depuis la base de données
-        const produits3 = await Produit3.find();
-
-        // Renvoyer la liste des produits en tant que réponse JSON
-        res.json({ produits3 });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Erreur lors de la récupération des produits.');
-    }
-});
-
 app.post('/stock/register3', async (req, res) => {
     const name = req.body.name;
     const quantity = req.body.quantity;
     const pret = req.body.pret;
     const nbHeure = req.body.nbHeure;
     const produitId = uuidv4(); // Générer un identifiant unique pour le produit
-    const imagePath = req.body.image; // Récupérez le nom du fichier téléchargé
+    const imagePath = req.body.imageName; // Récupérez le nom du fichier téléchargé
     // Créer un nouvel utilisateur
     const newProduit3 = new Produit3({
         numberId: "3" + produitId,
+        quantity,
         name,
         pret,
         nbHeure,
@@ -686,6 +662,7 @@ app.get('/stock/getAllProduit1', async (req, res) => {
     try {
         // Récupérer tous les produits de type Produit1 depuis la base de données
         const produits1 = await Produit1.find();
+
         // Renvoyer la liste des produits en tant que réponse JSON
         res.json({ produits1 });
     } catch (error) {

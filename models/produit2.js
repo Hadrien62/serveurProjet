@@ -6,7 +6,7 @@ const produit2Schema = new mongoose.Schema({
     name: String,
     pret: Date,
     nbJour: Number,
-    image: String,
+    image1: String,
     reserved: Boolean,
     id_user_reserved: String,
     is_late: Boolean
