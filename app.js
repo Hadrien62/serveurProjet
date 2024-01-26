@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 
 // Configuration de Mongoose
 //const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
-const url = 'mongodb://10.224.1.227:27017/FunLab';
+const url = 'mongodb://192.168.184.77:27017/FunLab';
 mongoose.connect(url)
 
 // Importer le modèle User
