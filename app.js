@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
-// Configuration de Mongoose
+// Configuration de Mongoose 
 //const uri = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1';
 const url = 'mongodb://192.168.184.165:27017/FunLab';
 mongoose.connect(url)
